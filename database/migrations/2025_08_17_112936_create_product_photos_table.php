@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_photos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products', 'id', 'product_photo_product_id')->onDelete('cascade');
+            $table->foreignUuid('product_id')->constrained('products', 'id', 'product_photo_product_id')->onDelete('cascade');
             $table->string('url');
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
