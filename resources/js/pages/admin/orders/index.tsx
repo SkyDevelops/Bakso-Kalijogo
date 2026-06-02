@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import {
     Calendar,
     CreditCard,
@@ -102,11 +102,13 @@ interface Props {
 
 interface OrderFormData {
     customer_name: string;
+    customer_phone: string;
+    customer_email: string;
     payment_method: string;
     table_number: number;
     status?: string; // Order status for editing
+    notes: string;
     items: { product_id: number; quantity: number }[];
-    [key: string]: any;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -159,8 +161,12 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
 
     const [formData, setFormData] = useState<OrderFormData>({
         customer_name: '',
+        customer_phone: '',
+        customer_email: '',
         payment_method: 'cash',
         table_number: 0,
+        status: 'pending',
+        notes: '',
         items: [],
     });
 
@@ -184,10 +190,7 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
     const filteredOrders = ordersList;
 
     // Calculate if we should show infinite scroll
-    const shouldShowInfiniteScroll = () => {
-        // Always show if there are more pages from server
-        return hasMorePages;
-    };
+    const shouldShowInfiniteScroll = () => hasMorePages && filteredOrders.length > 0;
 
     // Load more orders function
     const loadMoreOrders = useCallback(async () => {
@@ -232,11 +235,11 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
         }
     }, [currentPage, hasMorePages, isLoadingMore, debouncedSearchTerm, statusFilter]); // Intersection Observer for infinite scroll
     useEffect(() => {
-        if (!shouldShowInfiniteScroll()) return;
+        if (!hasMorePages) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && shouldShowInfiniteScroll() && !isLoadingMore) {
+                if (entries[0].isIntersecting && hasMorePages && !isLoadingMore) {
                     loadMoreOrders();
                 }
             },
@@ -246,13 +249,14 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
             },
         );
 
-        if (observerRef.current) {
-            observer.observe(observerRef.current);
+        const currentRef = observerRef.current;
+        if (currentRef) {
+            observer.observe(currentRef);
         }
 
         return () => {
-            if (observerRef.current) {
-                observer.unobserve(observerRef.current);
+            if (currentRef) {
+                observer.unobserve(currentRef);
             }
         };
     }, [loadMoreOrders, hasMorePages, isLoadingMore, debouncedSearchTerm, statusFilter]);
@@ -318,9 +322,12 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
     const resetForm = () => {
         setFormData({
             customer_name: '',
+            customer_phone: '',
+            customer_email: '',
             payment_method: 'cash',
             table_number: 0,
             status: 'pending', // Default order status
+            notes: '',
             items: [],
         });
         setCart([]);
@@ -328,7 +335,7 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
     };
 
     // Handle form input changes
-    const handleInputChange = (field: keyof OrderFormData, value: any) => {
+    const handleInputChange = (field: keyof OrderFormData, value: OrderFormData[keyof OrderFormData]) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
@@ -568,30 +575,17 @@ export default function OrdersIndex({ orders, products, filters }: Props) {
         }
     };
 
-    // Handle status update
-    const handleStatusUpdate = (orderId: number, newStatus: string) => {
-        router.post(
-            `/admin/orders/${orderId}/status`,
-            {
-                status: newStatus,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    router.reload({ only: ['orders'] });
-                },
-            },
-        );
-    };
-
     // Open edit modal
     const openEditModal = (order: Order) => {
         setSelectedOrder(order);
         setFormData({
             customer_name: order.customer_name,
+            customer_phone: order.customer_phone ?? '',
+            customer_email: order.customer_email ?? '',
             payment_method: order.payment.method,
             table_number: 0, // Default for existing orders
             status: order.status, // Order status, not payment status
+            notes: order.notes ?? '',
             items: [],
         });
         setIsEditModalOpen(true);

@@ -9,7 +9,7 @@ interface Props {
     status: string;
 }
 
-export default function PaymentFinish({ order_id, status }: Props) {
+export default function PaymentFinish({ order_id }: Props) {
     useEffect(() => {
         // Clear cart after successful payment
         localStorage.removeItem('kasirku_cart');

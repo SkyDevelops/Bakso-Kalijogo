@@ -177,13 +177,14 @@ export default function ProductsIndex({ products: initialProducts, categories, p
             },
         );
 
-        if (observerRef.current) {
-            observer.observe(observerRef.current);
+        const currentRef = observerRef.current;
+        if (currentRef) {
+            observer.observe(currentRef);
         }
 
         return () => {
-            if (observerRef.current) {
-                observer.unobserve(observerRef.current);
+            if (currentRef) {
+                observer.unobserve(currentRef);
             }
         };
     }, [loadMoreProducts, hasMorePages, isLoadingMore]);
@@ -209,7 +210,7 @@ export default function ProductsIndex({ products: initialProducts, categories, p
     };
 
     // Handle form input changes
-    const handleInputChange = (field: keyof ProductFormData, value: any) => {
+    const handleInputChange = (field: keyof ProductFormData, value: ProductFormData[keyof ProductFormData]) => {
         setFormData((prev) => ({
             ...prev,
             [field]: value,
@@ -360,13 +361,6 @@ export default function ProductsIndex({ products: initialProducts, categories, p
             style: 'currency',
             currency: 'IDR',
         }).format(amount);
-    };
-
-    // Get primary photo
-    const getPrimaryPhoto = (photos: ProductPhoto[] = []) => {
-        if (photos.length === 0) return null;
-        const primary = photos.find((photo) => photo.is_primary);
-        return primary?.url || photos[0]?.url || null;
     };
 
     return (

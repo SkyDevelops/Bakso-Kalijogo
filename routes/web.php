@@ -11,6 +11,17 @@ use Inertia\Inertia;
 
 Route::get('/', [CustomerController::class, 'index'])->name('home');
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('admin/dashboard/index');
+    })->name('dashboard');
+});
+
+// Dev route: render the Firebase login demo page
+Route::get('/firebase-login', function () {
+    return Inertia::render('auth/firebase-login');
+})->name('firebase.login');
+
 // Checkout routes
 Route::prefix('checkout')->group(function () {
     Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');

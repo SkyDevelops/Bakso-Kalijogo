@@ -10,7 +10,17 @@ import { useEffect, useState } from 'react';
 
 declare global {
     interface Window {
-        snap: any;
+        snap?: {
+            pay: (
+                token: string,
+                callbacks: {
+                    onSuccess: (result: unknown) => void;
+                    onPending: (result: unknown) => void;
+                    onError: (result: unknown) => void;
+                    onClose: () => void;
+                },
+            ) => void;
+        };
     }
 }
 
@@ -188,16 +198,16 @@ export default function CheckoutIndex() {
                 // Open Midtrans Snap
                 try {
                     window.snap.pay(data.snap_token, {
-                        onSuccess: function (result: any) {
+                        onSuccess: function () {
                             // Clear cart and redirect to order status
                             localStorage.removeItem('kasirku_cart');
                             router.visit(`/order/${data.order_id}/status`);
                         },
-                        onPending: function (result: any) {
+                        onPending: function () {
                             // Redirect to order status to wait for payment
                             router.visit(`/order/${data.order_id}/status`);
                         },
-                        onError: function (result: any) {
+                        onError: function (result: unknown) {
                             console.error('Payment error:', result);
                             alert('Pembayaran gagal. Silakan coba lagi.');
                             setIsLoading(false);
